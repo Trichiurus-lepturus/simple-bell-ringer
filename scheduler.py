@@ -24,12 +24,12 @@ class Scheduler:
         with self._lock:
             while self._tasks_heap:
                 task = self._tasks_heap[0]
-                if task.datetime < now - Config.TIME_TOLERANCE:
+                if task.ring_time < now - Config.TIME_TOLERANCE:
                     logger.info(
-                        f"清理过期任务：{task.description}（计划打铃时间：{task.datetime}）"
+                        f"清理过期任务：{task.description}（计划打铃时间：{task.ring_time}）"
                     )
                     heapq.heappop(self._tasks_heap)
-                elif task.datetime <= now + Config.TIME_TOLERANCE:
+                elif task.ring_time <= now + Config.TIME_TOLERANCE:
                     logger.info(f"获得当前任务：{task.description}")
                     return heapq.heappop(self._tasks_heap)
                 else:
@@ -76,9 +76,8 @@ class Scheduler:
         if not os.path.exists(file_path):
             logger.warning(f"文件未找到：{file_path}")
             return False
-
         if not os.path.isabs(file_path):
-            logger.warning(f"文件路径不是绝对路径：{file_path}")
+            logger.warning(f"相对路径已转换为绝对路径：{file_path}")
             file_path = os.path.abspath(file_path)
 
         try:
@@ -105,57 +104,52 @@ class Scheduler:
     def _load_tasks(self) -> List[Task]:
         target_date = self._get_target_date()
         tasks: List[Task] = []
-
         try:
             with open(Config.SCHEDULE_FILE_PATH, "r", encoding="utf-8") as f:
                 reader = csv.reader(f)
                 for row_num, row in enumerate(reader, 1):
+                    if not row or all(not cell.strip() for cell in row):
+                        continue
+                    if row[0].strip().startswith("#"):
+                        continue
                     if len(row) < 3:
                         logger.warning(
                             f"文件 {Config.SCHEDULE_FILE_PATH} 的第 {row_num} 行格式不正确，跳过"
                         )
                         continue
-
                     time_str, audio_filename, description = (
                         row[0].strip(),
                         row[1].strip(),
                         row[2].strip(),
                     )
-
                     try:
                         time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
                         task_datetime = datetime.combine(target_date, time_obj)
-
                         audio_path = os.path.join(
                             Config.AUDIO_FILES_DIRECTORY, audio_filename
                         )
                         if not os.path.isabs(audio_path):
-                            logger.warning(f"音频文件路径不是绝对路径：{audio_path}")
+                            logger.warning(f"相对路径已转换为绝对路径：{audio_path}")
                             audio_path = os.path.abspath(audio_path)
-
                         if not os.path.exists(audio_path):
                             logger.warning(f"音频文件不存在：{audio_path}")
                             continue
-
                         task = Task(
-                            datetime=task_datetime,
+                            ring_time=task_datetime,
                             audio_path=audio_path,
                             description=description,
                         )
                         tasks.append(task)
-
                     except ValueError as e:
                         logger.warning(
                             f"文件 {Config.SCHEDULE_FILE_PATH} 的第 {row_num} 行时间格式错误：{time_str}, 错误：{e}"
                         )
                     except Exception as e:
                         logger.error(f"创建任务时出错（第{row_num}行）：{e}")
-
         except FileNotFoundError:
             logger.error(f"文件未找到：{Config.SCHEDULE_FILE_PATH}")
         except Exception as e:
             logger.error(f"读取 {Config.SCHEDULE_FILE_PATH} 时出错：{e}")
-
         logger.info(f"从文件 {Config.SCHEDULE_FILE_PATH} 读取了 {len(tasks)} 个任务")
         return tasks
 
@@ -164,19 +158,16 @@ class Scheduler:
             now = datetime.now()
             logger.debug(f"=== 调度器状态 {now.strftime('%Y-%m-%d %H:%M:%S')} ===")
             logger.debug(f"任务堆大小: {len(self._tasks_heap)}")
-
             if not self._tasks_heap:
                 logger.debug("任务堆为空")
                 return
-
             logger.debug("当前任务列表:")
             for i, task in enumerate(self._tasks_heap):
-                status = "已过期" if task.datetime < now else "待执行"
+                status = "已过期" if task.ring_time < now else "待执行"
                 logger.debug(
-                    f"  {i + 1}. {task.datetime.strftime('%H:%M:%S')} - "
+                    f"  {i + 1}. {task.ring_time.strftime('%H:%M:%S')} - "
                     f"{task.description} ({task.audio_path}) [{status}] "
                 )
-
             next_task = self._tasks_heap[0]
             logger.debug(f"\n下一个任务: {next_task.description}")
-            logger.debug(f"执行时间: {next_task.datetime.strftime('%H:%M:%S')}")
+            logger.debug(f"执行时间: {next_task.ring_time.strftime('%H:%M:%S')}")
