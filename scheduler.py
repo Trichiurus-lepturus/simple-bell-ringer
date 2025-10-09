@@ -94,11 +94,12 @@ class Scheduler:
                                 return True
                         except ValueError:
                             logger.warning(
-                                f"文件 {file_path} 中包含无效格式的日期：{date_str}"
+                                f"文件 {file_path} 中包含无效格式的日期：{date_str}",
+                                exc_info=True,
                             )
             return False
         except Exception as e:
-            logger.error(f"读取 {file_path} 时出错：{e}")
+            logger.error(f"读取 {file_path} 时出错：{e}", exc_info=True)
             return False
 
     def _load_tasks(self) -> List[Task]:
@@ -129,8 +130,8 @@ class Scheduler:
                             Config.AUDIO_FILES_DIRECTORY, audio_filename
                         )
                         if not os.path.isabs(audio_path):
-                            logger.warning(f"相对路径已转换为绝对路径：{audio_path}")
                             audio_path = os.path.abspath(audio_path)
+                            logger.warning(f"相对路径已转换为绝对路径：{audio_path}")
                         if not os.path.exists(audio_path):
                             logger.warning(f"音频文件不存在：{audio_path}")
                             continue

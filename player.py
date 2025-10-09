@@ -17,7 +17,7 @@ class AudioPlayer:
     def run(self, task: Task) -> bool:
         self.stop()
         if not os.path.exists(task.audio_path):
-            logger.error(f"音频文件不存在：{task.audio_path}")
+            logger.error(f"音频文件不存在：{task.audio_path}", exc_info=True)
             return False
         try:
             command_template = Config.RING_COMMAND
@@ -38,7 +38,7 @@ class AudioPlayer:
             logger.info(f"开始播放：{task.description}")
             return True
         except Exception as e:
-            logger.error(f"播放失败：{e}")
+            logger.error(f"播放失败：{e}", exc_info=True)
             self._current_process = None
             return False
 
@@ -74,7 +74,8 @@ class AudioPlayer:
                 return True
             except subprocess.TimeoutExpired:
                 logger.warning(
-                    f"播放进程在 {Config.PROCESS_TERMINATE_TIMEOUT} 秒内未响应，强制终止"
+                    f"播放进程在 {Config.PROCESS_TERMINATE_TIMEOUT} 秒内未响应，强制终止",
+                    exc_info=True,
                 )
                 process.kill()
                 process.wait()
@@ -84,7 +85,7 @@ class AudioPlayer:
             logger.debug("播放进程已自然结束")
             return True
         except Exception as e:
-            logger.error(f"停止播放时出错：{e}")
+            logger.error(f"停止播放时出错：{e}", exc_info=True)
             return False
 
     def is_playing(self) -> bool:
