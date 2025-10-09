@@ -10,7 +10,7 @@ from scheduler import Scheduler
 logger = logging.getLogger(__name__)
 
 
-class Refresher:
+class TaskRefresher:
     def __init__(self):
         self.scheduler_instance = sched.scheduler(time.time, time.sleep)
         self.task_scheduler = Scheduler()
