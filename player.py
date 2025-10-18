@@ -44,8 +44,8 @@ class AudioPlayer:
                     stderr=subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
                     creationflags=(
-                        subprocess.CREATE_NEW_PROCESS_GROUP  # pyright: ignore
-                        | subprocess.DETACHED_PROCESS  # pyright: ignore
+                        getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+                        | getattr(subprocess, "DETACHED_PROCESS", 0)
                     ),
                 )
             else:
