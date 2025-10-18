@@ -16,8 +16,8 @@ class TaskRefresher:
         self._stop_event = threading.Event()
         self._running = False
         self._lock = threading.Lock()
-
         self._validate_config()
+        logger.info("刷新器初始化完成")
 
     def _validate_config(self):
         try:

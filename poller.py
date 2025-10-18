@@ -14,15 +14,12 @@ class BellPoller:
     def __init__(self, scheduler: Scheduler, audio_player: AudioPlayer):
         self._scheduler = scheduler
         self._audio_player = audio_player
-
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._running = False
         self._lock = threading.Lock()
-
         self._validate_config()
-
-        logger.info("打铃轮询器初始化完成")
+        logger.info("轮询器初始化完成")
 
     def _validate_config(self) -> None:
         time_window = Config.TIME_TOLERANCE.total_seconds() * 2

@@ -17,6 +17,7 @@ class AudioPlayer:
     def __init__(self):
         self._current_process: Optional[subprocess.Popen[bytes]] = None
         self._validate_config()
+        logger.info("播放器初始化完成")
 
     def _validate_config(self):
         if Config.AUDIO_PATH_PLACEHOLDER not in Config.RING_COMMAND_LIST:
@@ -80,12 +81,12 @@ class AudioPlayer:
         try:
             process.terminate()
             try:
-                process.wait(timeout=Config.PROCESS_TERMINATE_TIMEOUT)
+                process.wait(timeout=2)
                 logger.info("已停止当前播放")
                 return True
             except subprocess.TimeoutExpired:
                 logger.warning(
-                    f"播放进程在 {Config.PROCESS_TERMINATE_TIMEOUT} 秒内未响应，强制终止",
+                    "播放进程在2秒内未响应，强制终止",
                     exc_info=True,
                 )
                 process.kill()
