@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 class TaskRefresher:
     def __init__(self, task_scheduler: Scheduler):
-        self.task_scheduler = task_scheduler
-
+        self._task_scheduler = task_scheduler
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._running = False
@@ -47,7 +46,7 @@ class TaskRefresher:
     def _task_callback(self):
         logger.info("开始刷新任务列表")
         try:
-            self.task_scheduler.refresh_task_list()
+            self._task_scheduler.refresh_task_list()
             logger.info("刷新任务列表完成")
         except Exception as e:
             logger.error(f"刷新任务列表失败: {e}", exc_info=True)
