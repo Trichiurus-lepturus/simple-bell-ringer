@@ -1,6 +1,7 @@
 import subprocess
 import logging
 import os
+import platform
 import time
 from typing import Optional
 
@@ -8,6 +9,8 @@ from task import Task
 from config import Config
 
 logger = logging.getLogger(__name__)
+
+IS_WINDOWS = platform.system() == "Windows"
 
 
 class AudioPlayer:
@@ -32,14 +35,27 @@ class AudioPlayer:
             logger.info(
                 f"执行播放命令：{' '.join(command_list)} （任务: {task.description}）"
             )
-            self._current_process = subprocess.Popen(
-                command_list,
-                shell=False,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,
-            )
+            if IS_WINDOWS:
+                self._current_process = subprocess.Popen(
+                    command_list,
+                    shell=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=(
+                        subprocess.CREATE_NEW_PROCESS_GROUP  # pyright: ignore
+                        | subprocess.DETACHED_PROCESS  # pyright: ignore
+                    ),
+                )
+            else:
+                self._current_process = subprocess.Popen(
+                    command_list,
+                    shell=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
             if exit_code := self._current_process.poll() is not None:
                 logger.error(f"播放进程创建失败，立即退出，退出码: {exit_code}")
                 self._current_process = None
