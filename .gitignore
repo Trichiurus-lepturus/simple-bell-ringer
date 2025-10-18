@@ -23,3 +23,5 @@ dist/
 Thumbs.db
 
 *.log
+
+config.py

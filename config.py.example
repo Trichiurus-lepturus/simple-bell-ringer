@@ -1,0 +1,31 @@
+from datetime import timedelta
+
+
+class Config:
+    # 文件路径配置
+    SCHEDULE_FILE_PATH = "/path/to/schedule.csv"  # 打铃计划文件（多行CSV，每行格式：HH:mm:ss,音频文件名,描述）
+    RING_DATES_FILE_PATH = "/path/to/ring_dates.csv"  # 特殊打铃日期文件（单行CSV，格式：yyyy-MM-dd，优先级高）
+    NO_RING_DATES_FILE_PATH = (
+        "/path/to/no_ring_dates.csv"  # 特殊不打铃日期文件（单行CSV，格式：yyyy-MM-dd）
+    )
+    AUDIO_FILES_DIRECTORY = "/path/to/audio_directory"  # 音频文件目录（不递归子目录）
+    LOG_DIRECTORY = "/path/to/logs"  # 日志文件存储目录
+
+    # 时间配置
+    TIME_TOLERANCE = timedelta(seconds=1)  # 打铃时间容差（±n秒）
+    POLLING_INTERVAL = 0.6  # 轮询间隔（秒）
+    TASK_REFRESH_TIME = "02:00:00"  # 每日任务刷新时间（24小时制）
+    LOAD_TASKS_FOR_TOMORROW = (
+        False  # 任务加载模式：True=加载明天任务，False=加载今天任务
+    )
+
+    # 音频播放配置
+    AUDIO_PATH_PLACEHOLDER = "<audio_path>"  # 音频文件路径占位符
+    RING_COMMAND_LIST = [
+        "ffplay",
+        "-nodisp",
+        "-autoexit",
+        "-loglevel",
+        "quiet",
+        AUDIO_PATH_PLACEHOLDER,
+    ]  # 播放命令
