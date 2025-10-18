@@ -44,8 +44,8 @@ class AudioPlayer:
                     stderr=subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
                     creationflags=(
-                        getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-                        | getattr(subprocess, "DETACHED_PROCESS", 0)
+                        getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
+                        | getattr(subprocess, "DETACHED_PROCESS", 0x00000008)
                     ),
                 )
             else:
