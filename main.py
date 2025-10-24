@@ -6,7 +6,7 @@ import logging
 import platform
 from datetime import datetime
 from logging import handlers
-from typing import Optional, Dict, Union, Callable, Any
+from typing import Optional, Dict, Union, Callable, Any, List, Tuple
 from types import FrameType
 
 from config import Config
@@ -27,26 +27,55 @@ SignalHandler = Union[
 ]
 
 
+class ColorFormatter(logging.Formatter):
+    COLOR_MAP = {
+        logging.DEBUG: "\033[36m",
+        logging.INFO: "\033[32m",
+        logging.WARNING: "\033[38;5;214m",
+        logging.ERROR: "\033[31m",
+        logging.CRITICAL: "\033[41;30m",
+    }
+    RESET = "\033[0m"
+
+    def format(self, record: logging.LogRecord):
+        formatted_message = super().format(record)
+        if record.levelno in self.COLOR_MAP:
+            color = self.COLOR_MAP[record.levelno]
+            levelname_with_color = f"{color}{record.levelname}{self.RESET}"
+            formatted_message = formatted_message.replace(
+                f"[{record.levelname}]", f"[{levelname_with_color}]"
+            )
+        return formatted_message
+
+
 def setup_logging():
     log_dir = Config.LOG_DIRECTORY
     os.makedirs(log_dir, exist_ok=True)
     log_filename = datetime.now().strftime("bell_ringer_%Y%m%d_%H%M%S.log")
     log_filepath = os.path.join(log_dir, log_filename)
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)-10s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[
-            logging.FileHandler(log_filepath, encoding="utf-8"),
-            logging.StreamHandler(),
+    log_format = "%(asctime)s [%(levelname)s] %(name)-10s - %(message)s"
+    date_format = "%Y-%m-%d %H:%M:%S"
+    console_formatter = ColorFormatter(log_format, datefmt=date_format)
+    file_formatter = logging.Formatter(log_format, datefmt=date_format)
+    handlers_config: List[Tuple[logging.Handler, logging.Formatter]] = [
+        (logging.FileHandler(log_filepath, encoding="utf-8"), file_formatter),
+        (logging.StreamHandler(), console_formatter),
+        (
             handlers.RotatingFileHandler(
                 os.path.join(log_dir, "bell_ringer_latest.log"),
-                maxBytes=32 * 1024 * 1024,  # 32MB
+                maxBytes=32 * 1024 * 1024,
                 backupCount=5,
                 encoding="utf-8",
             ),
-        ],
-    )
+            file_formatter,
+        ),
+    ]
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.handlers = []
+    for handler, formatter in handlers_config:
+        handler.setFormatter(formatter)
+        root_logger.addHandler(handler)
 
 
 class Application:
@@ -63,10 +92,9 @@ class Application:
 
         self._win32_handler: Optional[Callable[[int], bool]] = None
 
-        logger.info("=" * 60)
         logger.info("打铃系统应用程序初始化完成")
         logger.info(f"运行平台：{platform.system()} {platform.release()}")
-        logger.info("=" * 60)
+        logger.info("=" * 48)
 
     def start(self) -> None:
         with self._lock:
@@ -83,12 +111,11 @@ class Application:
             logger.info("启动打铃轮询器...")
             self._poller.start()
 
-            logger.info("=" * 60)
             logger.info("打铃系统启动成功！")
             logger.info(f"任务刷新时间：{Config.TASK_REFRESH_TIME}")
             logger.info(f"轮询间隔：{Config.POLLING_INTERVAL}秒")
             logger.info(f"时间容差：±{Config.TIME_TOLERANCE.total_seconds()}秒")
-            logger.info("=" * 60)
+            logger.info("=" * 48)
 
         except Exception as e:
             logger.error(f"启动失败：{e}", exc_info=True)
@@ -143,9 +170,8 @@ class Application:
             except Exception as e:
                 logger.error(f"停止音频播放器时出错：{e}", exc_info=True)
 
-            logger.info("=" * 60)
             logger.info("所有组件已停止")
-            logger.info("=" * 60)
+            logger.info("=" * 48)
 
         except Exception as e:
             logger.error(f"关闭过程中出错：{e}", exc_info=True)
@@ -250,13 +276,12 @@ class Application:
 def main() -> int:
     setup_logging()
 
-    logger.info("=" * 60)
     logger.info("打铃系统启动中...")
     logger.info(f"Python 版本：{sys.version}")
     logger.info(f"操作系统：{platform.system()} {platform.release()}")
     logger.info(f"配置文件：{Config.__name__}")
     logger.info(f"日志目录：{Config.LOG_DIRECTORY}")
-    logger.info("=" * 60)
+    logger.info("=" * 48)
 
     app = Application()
     try:
@@ -265,9 +290,8 @@ def main() -> int:
         logger.critical(f"应用程序异常退出：{e}", exc_info=True)
         return 1
     finally:
-        logger.info("=" * 60)
         logger.info("打铃系统已退出")
-        logger.info("=" * 60)
+        logger.info("=" * 48)
 
     return 0
 
