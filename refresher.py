@@ -25,7 +25,7 @@ class TaskRefresher:
         except ValueError as e:
             raise ValueError(
                 f"配置的 TASK_REFRESH_TIME '{Config.TASK_REFRESH_TIME}' "
-                f"格式错误，应为 HH:MM:SS 格式: {e}"
+                f"格式错误，应为 HH:MM:SS 格式：{e}"
             )
 
     def _calculate_next_run_time(
@@ -49,14 +49,14 @@ class TaskRefresher:
             self._task_scheduler.refresh_task_list()
             logger.info("刷新任务列表完成")
         except Exception as e:
-            logger.error(f"刷新任务列表失败: {e}", exc_info=True)
+            logger.error(f"刷新任务列表失败：{e}", exc_info=True)
 
     def _run_loop(self):
         logger.info("任务刷新器线程已启动")
         try:
             self._task_callback()
         except Exception as e:
-            logger.error(f"首次刷新任务失败: {e}", exc_info=True)
+            logger.error(f"首次刷新任务失败：{e}", exc_info=True)
 
         while not self._stop_event.is_set():
             try:
@@ -73,7 +73,7 @@ class TaskRefresher:
                 if not self._stop_event.is_set():
                     self._task_callback()
             except Exception as e:
-                logger.error(f"刷新循环异常: {e}", exc_info=True)
+                logger.error(f"刷新循环异常：{e}", exc_info=True)
                 logger.info("30秒后重试...")
                 if self._stop_event.wait(timeout=30):
                     logger.info("重试等待期间收到停止信号")
@@ -91,7 +91,7 @@ class TaskRefresher:
             self._running = True
             self._stop_event.clear()
 
-        logger.info(f"启动任务刷新器，刷新时间: {Config.TASK_REFRESH_TIME}")
+        logger.info(f"启动任务刷新器，刷新时间：{Config.TASK_REFRESH_TIME}")
         try:
             self._thread = threading.Thread(
                 target=self._run_loop, name="TaskRefresherThread", daemon=False
@@ -99,7 +99,7 @@ class TaskRefresher:
             self._thread.start()
             logger.info("任务刷新器启动成功")
         except Exception as e:
-            logger.error(f"启动任务刷新器失败: {e}", exc_info=True)
+            logger.error(f"启动任务刷新器失败：{e}", exc_info=True)
             with self._lock:
                 self._running = False
             raise

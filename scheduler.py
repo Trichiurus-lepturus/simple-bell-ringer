@@ -158,7 +158,7 @@ class Scheduler:
         with self._lock:
             now = datetime.now()
             logger.debug(f"=== 调度器状态 {now.strftime('%Y-%m-%d %H:%M:%S')} ===")
-            logger.debug(f"任务堆大小: {len(self._tasks_heap)}")
+            logger.debug(f"任务堆大小：{len(self._tasks_heap)}")
             if not self._tasks_heap:
                 logger.debug("任务堆为空")
                 return
@@ -170,5 +170,5 @@ class Scheduler:
                     f"{task.description} ({task.audio_path}) [{status}] "
                 )
             next_task = self._tasks_heap[0]
-            logger.debug(f"\n下一个任务: {next_task.description}")
-            logger.debug(f"执行时间: {next_task.ring_time.strftime('%H:%M:%S')}")
+            logger.debug(f"\n下一个任务：{next_task.description}")
+            logger.debug(f"执行时间：{next_task.ring_time.strftime('%H:%M:%S')}")

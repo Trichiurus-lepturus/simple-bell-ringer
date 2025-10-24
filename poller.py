@@ -26,10 +26,10 @@ class BellPoller:
         if Config.POLLING_INTERVAL >= time_window:
             raise ValueError(
                 f"轮询间隔过大！\n"
-                f"  打铃时间窗口: {time_window}秒 (±{Config.TIME_TOLERANCE.total_seconds()}秒)\n"
-                f"  当前轮询间隔: {Config.POLLING_INTERVAL}秒\n"
-                f"  要求: POLLING_INTERVAL < {time_window}秒\n"
-                f"  建议: POLLING_INTERVAL <= {time_window / 2}秒"
+                f"  打铃时间窗口：{time_window}秒 (±{Config.TIME_TOLERANCE.total_seconds()}秒)\n"
+                f"  当前轮询间隔：{Config.POLLING_INTERVAL}秒\n"
+                f"  要求：POLLING_INTERVAL < {time_window}秒\n"
+                f"  建议：POLLING_INTERVAL <= {time_window / 2}秒"
             )
         if Config.POLLING_INTERVAL > time_window / 2:
             logger.warning(
@@ -37,9 +37,9 @@ class BellPoller:
                 f"({time_window / 2}秒)，建议降低以提高可靠性"
             )
         logger.info(
-            f"轮询配置验证通过 - 时间窗口: {time_window}秒, "
-            f"轮询间隔: {Config.POLLING_INTERVAL}秒, "
-            f"窗口内轮询次数: ~{int(time_window / Config.POLLING_INTERVAL)}次"
+            f"轮询配置验证通过 - 时间窗口：{time_window}秒, "
+            f"轮询间隔：{Config.POLLING_INTERVAL}秒, "
+            f"窗口内轮询次数：~{int(time_window / Config.POLLING_INTERVAL)}次"
         )
 
     def start(self) -> None:
@@ -117,7 +117,7 @@ class BellPoller:
                 if next_poll_time < now - Config.POLLING_INTERVAL:
                     logger.warning(
                         f"检测到时间漂移，重置轮询时间基准 "
-                        f"(漂移: {now - next_poll_time:.1f}秒)"
+                        f"(漂移：{now - next_poll_time:.1f}秒)"
                     )
                     next_poll_time = now + Config.POLLING_INTERVAL
         finally:

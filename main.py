@@ -34,7 +34,7 @@ def setup_logging():
     log_filepath = os.path.join(log_dir, log_filename)
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s [%(levelname)-8s] %(name)s - %(message)s",
+        format="%(asctime)s [%(levelname)s] %(name)-10s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[
             logging.FileHandler(log_filepath, encoding="utf-8"),
@@ -65,7 +65,7 @@ class Application:
 
         logger.info("=" * 60)
         logger.info("打铃系统应用程序初始化完成")
-        logger.info(f"运行平台: {platform.system()} {platform.release()}")
+        logger.info(f"运行平台：{platform.system()} {platform.release()}")
         logger.info("=" * 60)
 
     def start(self) -> None:
@@ -85,9 +85,9 @@ class Application:
 
             logger.info("=" * 60)
             logger.info("打铃系统启动成功！")
-            logger.info(f"任务刷新时间: {Config.TASK_REFRESH_TIME}")
-            logger.info(f"轮询间隔: {Config.POLLING_INTERVAL}秒")
-            logger.info(f"时间容差: ±{Config.TIME_TOLERANCE.total_seconds()}秒")
+            logger.info(f"任务刷新时间：{Config.TASK_REFRESH_TIME}")
+            logger.info(f"轮询间隔：{Config.POLLING_INTERVAL}秒")
+            logger.info(f"时间容差：±{Config.TIME_TOLERANCE.total_seconds()}秒")
             logger.info("=" * 60)
 
         except Exception as e:
@@ -199,7 +199,7 @@ class Application:
                     win32con.CTRL_LOGOFF_EVENT,
                     win32con.CTRL_SHUTDOWN_EVENT,
                 ):
-                    logger.info(f"收到 Windows 控制台事件: {event_type}")
+                    logger.info(f"收到 Windows 控制台事件：{event_type}")
                     self.shutdown()
                     return True
                 return False
@@ -252,10 +252,10 @@ def main() -> int:
 
     logger.info("=" * 60)
     logger.info("打铃系统启动中...")
-    logger.info(f"Python 版本: {sys.version}")
-    logger.info(f"操作系统: {platform.system()} {platform.release()}")
-    logger.info(f"配置文件: {Config.__name__}")
-    logger.info(f"日志目录: {Config.LOG_DIRECTORY}")
+    logger.info(f"Python 版本：{sys.version}")
+    logger.info(f"操作系统：{platform.system()} {platform.release()}")
+    logger.info(f"配置文件：{Config.__name__}")
+    logger.info(f"日志目录：{Config.LOG_DIRECTORY}")
     logger.info("=" * 60)
 
     app = Application()
