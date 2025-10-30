@@ -24,12 +24,12 @@ class Scheduler:
         with self._lock:
             while self._tasks_heap:
                 task = self._tasks_heap[0]
-                if task.ring_time < now - Config.TIME_TOLERANCE:
+                if task.ring_time < now - timedelta(seconds=Config.TIME_TOLERANCE):
                     logger.info(
                         f"清理过期任务：{task.description}（计划打铃时间：{task.ring_time}）"
                     )
                     heapq.heappop(self._tasks_heap)
-                elif task.ring_time <= now + Config.TIME_TOLERANCE:
+                elif task.ring_time <= now + timedelta(seconds=Config.TIME_TOLERANCE):
                     logger.info(f"获得当前任务：{task.description}")
                     return heapq.heappop(self._tasks_heap)
                 else:

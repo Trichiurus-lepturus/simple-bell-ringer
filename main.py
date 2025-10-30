@@ -114,7 +114,7 @@ class Application:
             logger.info("打铃系统启动成功！")
             logger.info(f"任务刷新时间：{Config.TASK_REFRESH_TIME}")
             logger.info(f"轮询间隔：{Config.POLLING_INTERVAL}秒")
-            logger.info(f"时间容差：±{Config.TIME_TOLERANCE.total_seconds()}秒")
+            logger.info(f"时间容差：±{Config.TIME_TOLERANCE}秒")
             logger.info("=" * 48)
 
         except Exception as e:

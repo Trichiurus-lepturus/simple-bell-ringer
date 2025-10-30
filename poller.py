@@ -22,11 +22,11 @@ class BellPoller:
         logger.info("轮询器初始化完成")
 
     def _validate_config(self) -> None:
-        time_window = Config.TIME_TOLERANCE.total_seconds() * 2
+        time_window = Config.TIME_TOLERANCE * 2
         if Config.POLLING_INTERVAL >= time_window:
             raise ValueError(
                 f"轮询间隔过大！\n"
-                f"  打铃时间窗口：{time_window}秒 (±{Config.TIME_TOLERANCE.total_seconds()}秒)\n"
+                f"  打铃时间窗口：{time_window}秒 (±{Config.TIME_TOLERANCE}秒)\n"
                 f"  当前轮询间隔：{Config.POLLING_INTERVAL}秒\n"
                 f"  要求：POLLING_INTERVAL < {time_window}秒\n"
                 f"  建议：POLLING_INTERVAL <= {time_window / 2}秒"
