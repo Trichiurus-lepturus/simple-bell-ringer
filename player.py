@@ -1,7 +1,7 @@
 import subprocess
 import logging
 import os
-import platform
+import sys
 import time
 import signal
 from typing import Optional
@@ -10,8 +10,6 @@ from task import Task
 from config import Config
 
 logger = logging.getLogger(__name__)
-
-IS_WINDOWS = platform.system() == "Windows"
 
 
 class AudioPlayer:
@@ -37,7 +35,7 @@ class AudioPlayer:
             logger.info(
                 f"执行播放命令：{' '.join(command_list)} （任务：{task.description}）"
             )
-            if IS_WINDOWS:
+            if sys.platform == "win32":
                 self._current_process = subprocess.Popen(
                     command_list,
                     shell=False,
@@ -77,7 +75,7 @@ class AudioPlayer:
         process = self._current_process
         self._current_process = None
         try:
-            if IS_WINDOWS:
+            if sys.platform == "win32":
                 return self._stop_windows(process)
             else:
                 return self._stop_unix(process)

@@ -17,8 +17,6 @@ from refresher import TaskRefresher
 
 logger = logging.getLogger(__name__)
 
-IS_WINDOWS = platform.system() == "Windows"
-
 SignalHandler = Union[
     Callable[[int, Optional[FrameType]], Any],
     int,
@@ -48,7 +46,43 @@ class ColorFormatter(logging.Formatter):
         return formatted_message
 
 
+def enable_windows_ansi_support() -> None:
+    if not sys.platform == "win32":
+        return
+
+    import ctypes
+    import ctypes.wintypes as wintypes
+
+    STD_OUTPUT_HANDLE = -11
+    STD_ERROR_HANDLE = -12
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+    kernel32 = ctypes.windll.kernel32
+    h_out = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+    h_err = kernel32.GetStdHandle(STD_ERROR_HANDLE)
+    if h_out == -1:
+        raise RuntimeError("无法获取标准输出句柄")
+    if h_err == -1:
+        raise RuntimeError("无法获取标准错误句柄")
+    mode_out = wintypes.DWORD()
+    mode_err = wintypes.DWORD()
+    if not kernel32.GetConsoleMode(h_out, ctypes.byref(mode_out)):
+        raise RuntimeError("无法获取标准输出的控制台模式")
+    if not kernel32.GetConsoleMode(h_err, ctypes.byref(mode_err)):
+        raise RuntimeError("无法获取标准错误的控制台模式")
+    mode_out.value |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+    mode_err.value |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+    if not kernel32.SetConsoleMode(h_out, mode_out):
+        raise RuntimeError("无法为标准输出设置虚拟终端处理模式")
+    if not kernel32.SetConsoleMode(h_err, mode_err):
+        raise RuntimeError("无法为标准错误设置虚拟终端处理模式")
+
+
 def setup_logging():
+    ansi_error: Optional[str] = None
+    try:
+        enable_windows_ansi_support()
+    except Exception as e:
+        ansi_error = str(e)
     log_dir = Config.LOG_DIRECTORY
     os.makedirs(log_dir, exist_ok=True)
     log_filename = datetime.now().strftime("bell_ringer_%Y%m%d_%H%M%S.log")
@@ -76,6 +110,11 @@ def setup_logging():
     for handler, formatter in handlers_config:
         handler.setFormatter(formatter)
         root_logger.addHandler(handler)
+    if sys.platform == "win32":
+        if ansi_error:
+            logger.warning(f"启用 Windows ANSI 支持失败：{ansi_error}")
+        else:
+            logger.info("Windows 控制台 ANSI 颜色支持已启用")
 
 
 class Application:
@@ -125,7 +164,7 @@ class Application:
             raise
 
     def wait_for_shutdown(self) -> None:
-        if IS_WINDOWS:
+        if sys.platform == "win32":
             logger.info("应用程序运行中，按 Ctrl+C 或 Ctrl+Break 退出...")
         else:
             logger.info("应用程序运行中，按 Ctrl+C 或发送 SIGTERM 信号退出...")
@@ -188,7 +227,7 @@ class Application:
             )
             logger.info("已注册 SIGINT (Ctrl+C) 处理器")
 
-            if IS_WINDOWS:
+            if sys.platform == "win32":
                 try:
                     sigbreak = getattr(signal, "SIGBREAK", None)
                     if sigbreak is not None:
@@ -246,7 +285,7 @@ class Application:
                     signal.signal(sig, handler)
             if self._original_handlers:
                 logger.debug("信号处理器已恢复")
-            if IS_WINDOWS and self._win32_handler is not None:
+            if sys.platform == "win32" and self._win32_handler is not None:
                 try:
                     import win32api
 
