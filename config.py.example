@@ -28,15 +28,23 @@ class Config:
     TASK_REFRESH_TIME = "04:00:00"
     # 任务加载模式：True=加载明天任务，False=加载今天任务
     LOAD_TASKS_FOR_TOMORROW = False
-    # 任务刷新时间需要在所有打铃任务时间之前或之后，如果是在之前，
-    # 则应将任务加载模式设置为加载今天任务（False），否则应加载明天任务（True）
+    # 如果TASK_REFRESH_TIME在所有打铃时间之前，设置为False
+    # 如果TASK_REFRESH_TIME在所有打铃时间之后，设置为True
 
     # 音频播放配置
 
     # 音频文件路径占位符
     AUDIO_PATH_PLACEHOLDER = "<audio_path>"
 
-    # 播放命令
+    # 播放命令列表
+    # 程序将使用此命令列表来播放音频，AUDIO_PATH_PLACEHOLDER会被替换为实际音频文件路径
+    # 测试步骤：
+    # 1. 将下面列表中的所有元素按顺序用空格连接
+    # 2. 将AUDIO_PATH_PLACEHOLDER替换为一个真实的音频文件路径
+    # 3. 在终端中执行这个命令，观察是否：
+    #    - 能够正常播放音频
+    #    - 没有打印错误信息
+    #    - 播放完成自动退出
     RING_COMMAND_LIST = [
         "ffplay",
         "-nodisp",
