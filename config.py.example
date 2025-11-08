@@ -4,10 +4,10 @@ class Config:
     # 打铃计划文件（绝对路径，UTF-8编码，多行CSV，24小时制时间，每行格式：HH:mm:ss,音频文件名,描述）
     SCHEDULE_FILE_PATH = "/path/to/schedule.csv"
 
-    # 特殊打铃日期文件（绝对路径，UTF-8编码，单行CSV，优先级高于特殊不打铃日期，格式：yyyy-MM-dd,...）
+    # 特殊打铃日期文件（绝对路径，UTF-8编码，多行CSV，优先级高于特殊不打铃日期，每行格式：yyyy-MM-dd）
     RING_DATES_FILE_PATH = "/path/to/ring_dates.csv"
 
-    # 特殊不打铃日期文件（绝对路径，UTF-8编码，单行CSV，优先级低于特殊打铃日期，格式：yyyy-MM-dd,...）
+    # 特殊不打铃日期文件（绝对路径，UTF-8编码，多行CSV，优先级低于特殊打铃日期，每行格式：yyyy-MM-dd）
     NO_RING_DATES_FILE_PATH = "/path/to/no_ring_dates.csv"
 
     # 音频文件目录（绝对路径，不递归子目录）

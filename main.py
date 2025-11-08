@@ -6,7 +6,7 @@ import logging
 import platform
 from datetime import datetime
 from logging import handlers
-from typing import Optional, Dict, Union, Callable, Any, List, Tuple
+from typing import Optional, Union, Callable, Any
 from types import FrameType
 
 from config import Config
@@ -91,7 +91,7 @@ def setup_logging():
     date_format = "%Y-%m-%d %H:%M:%S"
     console_formatter = ColorFormatter(log_format, datefmt=date_format)
     file_formatter = logging.Formatter(log_format, datefmt=date_format)
-    handlers_config: List[Tuple[logging.Handler, logging.Formatter]] = [
+    handlers_config: list[tuple[logging.Handler, logging.Formatter]] = [
         (logging.FileHandler(log_filepath, encoding="utf-8"), file_formatter),
         (logging.StreamHandler(), console_formatter),
         (
@@ -127,7 +127,7 @@ class Application:
         self._shutdown_event = threading.Event()
         self._is_running = False
         self._lock = threading.Lock()
-        self._original_handlers: Dict[signal.Signals, SignalHandler] = {}
+        self._original_handlers: dict[signal.Signals, SignalHandler] = {}
 
         self._win32_handler: Optional[Callable[[int], bool]] = None
 

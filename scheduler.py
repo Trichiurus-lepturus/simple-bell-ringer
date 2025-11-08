@@ -1,5 +1,5 @@
 from datetime import datetime, date, timedelta
-from typing import List, Optional
+from typing import Optional
 import os
 import csv
 import heapq
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Scheduler:
     def __init__(self):
-        self._tasks_heap: List[Task] = []
+        self._tasks_heap: list[Task] = []
         self._lock = threading.Lock()
         logger.info("调度器初始化完成")
 
@@ -72,6 +72,47 @@ class Scheduler:
             scheduled = True
         return scheduled
 
+    def _normalize_date_string(self, date_str: str) -> tuple[str, bool]:
+        date_str = date_str.strip()
+        if not date_str:
+            return date_str, False
+        parts = date_str.split("-")
+        if parts and len(parts) == 3:
+            try:
+                year = parts[0].zfill(4)
+                month = parts[1].zfill(2)
+                day = parts[2].zfill(2)
+                result = f"{year}-{month}-{day}"
+                modified = result != date_str
+                return result, modified
+            except Exception:
+                pass
+        return date_str, False
+
+    def _normalize_time_string(self, time_str: str) -> tuple[str, bool]:
+        time_str = time_str.strip()
+        if not time_str:
+            return time_str, False
+        parts = time_str.split(":")
+        if len(parts) == 3:
+            try:
+                hour = parts[0].zfill(2)
+                minute = parts[1].zfill(2)
+                second = parts[2].zfill(2)
+                result = f"{hour}:{minute}:{second}"
+                modified = result != time_str
+                return result, modified
+            except Exception:
+                pass
+        elif len(parts) == 2:
+            try:
+                hour = parts[0].zfill(2)
+                minute = parts[1].zfill(2)
+                return f"{hour}:{minute}:00", True
+            except Exception:
+                pass
+        return time_str, False
+
     def _is_date_in_file(self, target_date: date, file_path: str) -> bool:
         if not os.path.exists(file_path):
             logger.warning(f"文件未找到：{file_path}")
@@ -81,32 +122,48 @@ class Scheduler:
             file_path = os.path.abspath(file_path)
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8-sig") as f:
                 reader = csv.reader(f)
-                for row in reader:
-                    for date_str in row:
-                        date_str = date_str.strip()
-                        if not date_str:
-                            continue
-                        try:
-                            file_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-                            if target_date == file_date:
-                                return True
-                        except ValueError:
-                            logger.warning(
-                                f"文件 {file_path} 中包含无效格式的日期：{date_str}",
-                                exc_info=True,
+                for row_num, row in enumerate(reader, 1):
+                    if not row or all(not cell.strip() for cell in row):
+                        continue
+                    if row[0].strip().startswith("#"):
+                        continue
+                    date_str = row[0].strip()
+                    if not date_str:
+                        continue
+                    normalized_date_str, is_normalized = self._normalize_date_string(
+                        date_str
+                    )
+                    if is_normalized:
+                        logger.warning(
+                            f"文件 {Config.SCHEDULE_FILE_PATH} 的第 {row_num} 行，"
+                            f"日期格式不规范，已自动补0：'{date_str}' → '{normalized_date_str}'"
+                        )
+                    try:
+                        file_date = datetime.strptime(
+                            normalized_date_str, "%Y-%m-%d"
+                        ).date()
+                        if target_date == file_date:
+                            logger.debug(
+                                f"在 {file_path} 第 {row_num} 行找到匹配日期：{date_str}"
                             )
+                            return True
+                    except ValueError:
+                        logger.warning(
+                            f"文件 {file_path} 第 {row_num} 行包含无效格式的日期：{date_str}",
+                            exc_info=True,
+                        )
             return False
         except Exception as e:
             logger.error(f"读取 {file_path} 时出错：{e}", exc_info=True)
             return False
 
-    def _load_tasks(self) -> List[Task]:
+    def _load_tasks(self) -> list[Task]:
         target_date = self._get_target_date()
-        tasks: List[Task] = []
+        tasks: list[Task] = []
         try:
-            with open(Config.SCHEDULE_FILE_PATH, "r", encoding="utf-8") as f:
+            with open(Config.SCHEDULE_FILE_PATH, "r", encoding="utf-8-sig") as f:
                 reader = csv.reader(f)
                 for row_num, row in enumerate(reader, 1):
                     if not row or all(not cell.strip() for cell in row):
@@ -123,8 +180,18 @@ class Scheduler:
                         row[1].strip(),
                         row[2].strip(),
                     )
+                    normalized_time_str, is_normalized = self._normalize_time_string(
+                        time_str
+                    )
+                    if is_normalized:
+                        logger.warning(
+                            f"文件 {Config.SCHEDULE_FILE_PATH} 的第 {row_num} 行，"
+                            f"时间格式不规范，已自动补0：'{time_str}' → '{normalized_time_str}'"
+                        )
                     try:
-                        time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
+                        time_obj = datetime.strptime(
+                            normalized_time_str, "%H:%M:%S"
+                        ).time()
                         task_datetime = datetime.combine(target_date, time_obj)
                         audio_path = os.path.join(
                             Config.AUDIO_FILES_DIRECTORY, audio_filename
@@ -141,16 +208,21 @@ class Scheduler:
                             description=description,
                         )
                         tasks.append(task)
+                        logger.debug(
+                            f"成功加载任务(第{row_num}行): {time_str} -> {normalized_time_str} - {description}"
+                        )
                     except ValueError as e:
                         logger.warning(
                             f"文件 {Config.SCHEDULE_FILE_PATH} 的第 {row_num} 行时间格式错误：{time_str}, 错误：{e}"
                         )
                     except Exception as e:
-                        logger.error(f"创建任务时出错（第{row_num}行）：{e}")
+                        logger.error(
+                            f"创建任务时出错（第{row_num}行）：{e}", exc_info=True
+                        )
         except FileNotFoundError:
             logger.error(f"文件未找到：{Config.SCHEDULE_FILE_PATH}")
         except Exception as e:
-            logger.error(f"读取 {Config.SCHEDULE_FILE_PATH} 时出错：{e}")
+            logger.error(f"读取 {Config.SCHEDULE_FILE_PATH} 时出错：{e}", exc_info=True)
         logger.info(f"从文件 {Config.SCHEDULE_FILE_PATH} 读取了 {len(tasks)} 个任务")
         return tasks
 
@@ -162,12 +234,12 @@ class Scheduler:
             if not self._tasks_heap:
                 logger.debug("任务堆为空")
                 return
-            logger.debug("当前任务列表:")
+            logger.debug("当前任务列表：")
             for i, task in enumerate(self._tasks_heap):
                 status = "已过期" if task.ring_time < now else "待执行"
                 logger.debug(
                     f"  {i + 1}. {task.ring_time.strftime('%H:%M:%S')} - "
-                    f"{task.description} ({task.audio_path}) [{status}] "
+                    f"{task.description} ({task.audio_path}) [{status}]"
                 )
             next_task = self._tasks_heap[0]
             logger.debug(f"\n下一个任务：{next_task.description}")
