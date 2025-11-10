@@ -20,20 +20,19 @@ class Scheduler:
 
     def pop_current_task(self) -> Optional[Task]:
         now = datetime.now()
+        expired_boundary = now - timedelta(seconds=Config.TIME_TOLERANCE)
+        execute_boundary = now + timedelta(seconds=Config.TIME_TOLERANCE)
 
         with self._lock:
-            while self._tasks_heap:
-                task = self._tasks_heap[0]
-                if task.ring_time < now - timedelta(seconds=Config.TIME_TOLERANCE):
-                    logger.info(
-                        f"清理过期任务：{task.description}（计划打铃时间：{task.ring_time}）"
-                    )
-                    heapq.heappop(self._tasks_heap)
-                elif task.ring_time <= now + timedelta(seconds=Config.TIME_TOLERANCE):
-                    logger.info(f"获得当前任务：{task.description}")
-                    return heapq.heappop(self._tasks_heap)
-                else:
-                    return None
+            while self._tasks_heap and self._tasks_heap[0].ring_time < expired_boundary:
+                task = heapq.heappop(self._tasks_heap)
+                logger.info(
+                    f"清理过期任务：{task.description}（计划打铃时间：{task.ring_time}）"
+                )
+            if self._tasks_heap and self._tasks_heap[0].ring_time <= execute_boundary:
+                task = heapq.heappop(self._tasks_heap)
+                logger.info(f"获得当前任务：{task.description}")
+                return task
             return None
 
     def refresh_task_list(self) -> None:

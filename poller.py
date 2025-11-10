@@ -101,25 +101,14 @@ class BellPoller:
 
                 now = time.perf_counter()
                 wait_time = max(0, next_poll_time - now)
-                if (
-                    wait_time == 0
-                    and (now - next_poll_time + Config.POLLING_INTERVAL)
-                    > Config.POLLING_INTERVAL * 0.1
-                ):
-                    overshoot = now - next_poll_time + Config.POLLING_INTERVAL
-                    logger.warning(
-                        f"轮询执行耗时过长，超出间隔 {overshoot:.3f}秒，立即进行下次轮询"
-                    )
+                if wait_time == 0:
+                    overshoot = now - next_poll_time
+                    if overshoot > Config.POLLING_INTERVAL * 0.1:
+                        logger.warning(f"轮询执行耗时过长，超出间隔 {overshoot:.3f}秒")
                 if self._stop_event.wait(timeout=wait_time):
                     logger.info("收到停止信号，退出轮询循环")
                     break
                 next_poll_time += Config.POLLING_INTERVAL
-                if next_poll_time < now - Config.POLLING_INTERVAL:
-                    logger.warning(
-                        f"检测到时间漂移，重置轮询时间基准 "
-                        f"(漂移：{now - next_poll_time:.1f}秒)"
-                    )
-                    next_poll_time = now + Config.POLLING_INTERVAL
         finally:
             with self._lock:
                 self._running = False
