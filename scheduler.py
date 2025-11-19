@@ -131,6 +131,14 @@ class Scheduler:
                     date_str = row[0].strip()
                     if not date_str:
                         continue
+                    if len(row) > 1:
+                        non_empty_extra_cols = [cell.strip() for cell in row[1:] if cell.strip()]
+                        if non_empty_extra_cols:
+                            ignored_content = ",".join(non_empty_extra_cols)
+                            logger.warning(
+                                f"文件 {file_path} 的第 {row_num} 行包含多列，"
+                                f"已忽略以下内容：{ignored_content}"
+                            )
                     normalized_date_str, is_normalized = self._normalize_date_string(
                         date_str
                     )
