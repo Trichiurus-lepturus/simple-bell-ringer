@@ -25,3 +25,19 @@ Thumbs.db
 *.log
 
 config.py
+*.csv
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.oga
+*.m4a
+*.wma
+*.aiff
+*.aif
+*.opus
+*.weba
+*.amr
+*.mid
+*.midi
