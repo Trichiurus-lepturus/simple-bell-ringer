@@ -10,7 +10,7 @@ class Config:
     # 特殊不打铃日期文件（绝对路径，UTF-8编码，多行CSV，优先级低于特殊打铃日期，每行格式：yyyy-MM-dd）
     NO_RING_DATES_FILE_PATH = "/path/to/no_ring_dates.csv"
 
-    # 音频文件目录（绝对路径，不递归子目录）
+    # 音频文件目录（绝对路径，请将音频文件直接放在此目录下）
     AUDIO_FILES_DIRECTORY = "/path/to/audio"
 
     # 日志文件目录（绝对路径，如不存在将自动创建）
@@ -24,12 +24,8 @@ class Config:
     POLLING_INTERVAL = 0.6
     # 建议保持：POLLING_INTERVAL < TIME_TOLERANCE
 
-    # 每日任务刷新时间（24小时制）
+    # 每日任务列表刷新时间（24小时制）
     TASK_REFRESH_TIME = "04:00:00"
-    # 任务加载模式：True=加载明天任务，False=加载今天任务
-    LOAD_TASKS_FOR_TOMORROW = False
-    # 如果TASK_REFRESH_TIME在所有打铃时间之前，设置为False
-    # 如果TASK_REFRESH_TIME在所有打铃时间之后，设置为True
 
     # 音频播放配置
 
