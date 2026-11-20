@@ -158,8 +158,8 @@ class Application:
 
         except Exception as e:
             logger.error(f"启动失败：{e}", exc_info=True)
-            with self._lock:
-                self._is_running = False
+            # 此时 _is_running 仍为 True。先 shutdown()，让已经启动的组件
+            # 按序停止；如果先把标志清掉，shutdown() 会直接返回，造成泄漏。
             self.shutdown()
             raise
 
