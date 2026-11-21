@@ -303,7 +303,7 @@ class Scheduler:
                 logger.warning(
                     "任务列表第 %d 行（%s）与第 %d 行（%s）的间隔为 %.3f 秒，"
                     "不超过 2×TIME_TOLERANCE（%.3f 秒）；"
-                    "两条任务时间间隔过近，请检查作息表。",
+                    "两条任务时间间隔过近，请检查任务列表。",
                     previous.row_num,
                     previous.ring_time_of_day.strftime("%H:%M:%S"),
                     current.row_num,
